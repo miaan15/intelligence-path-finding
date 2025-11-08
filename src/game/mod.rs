@@ -1,4 +1,6 @@
+pub mod game_manager;
 pub mod grid_render;
+pub mod ui_manager;
 
 use macroquad::prelude::*;
 

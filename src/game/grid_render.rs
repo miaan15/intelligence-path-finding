@@ -1,4 +1,4 @@
-use crate::render::RenderConfig;
+use crate::game::RenderConfig;
 use crate::world::grid::GridMap;
 use macroquad::prelude::*;
 
@@ -71,8 +71,6 @@ impl GridRenderer {
             self.mesh = None;
         }
     }
-
-    pub fn clear_background(&self) { clear_background(self.config.background_color); }
 
     pub fn draw(&self) {
         if let Some(mesh) = &self.mesh {

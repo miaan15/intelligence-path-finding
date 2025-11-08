@@ -10,14 +10,14 @@ pub enum GridNodeValue {
 
 #[derive(Debug)]
 pub struct Grid {
-    pub(crate) width: usize,
-    pub(crate) height: usize,
+    width: usize,
+    height: usize,
     data: Vec<GridNodeValue>,
 }
 
 pub struct GridMap {
     grid: Box<Grid>,
-    pub(crate) config: WorldConfig,
+    config: WorldConfig,
 }
 
 impl Grid {
