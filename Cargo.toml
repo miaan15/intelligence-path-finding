@@ -2,8 +2,16 @@
 name = "intelligence-path-finding"
 version = "0.1.0"
 edition = "2024"
-description = "Intelligent path-finding algorithms with interactive visualization"
-authors = ["Your Name <your.email@example.com>"]
+description = "Optimize path-finding algorithms using PSO, ACO"
+authors = ["miaan"]
+
+[lib]
+name = "pathfinding"
+path = "src/lib.rs"
+
+[[bin]]
+name = "pathfinding-demo"
+path = "src/main.rs"
 
 [dependencies]
 macroquad = "0.4"
@@ -12,11 +20,3 @@ serde_json = "1.0"
 
 [dev-dependencies]
 criterion = "0.5"
-
-[[bin]]
-name = "pathfinding-demo"
-path = "src/main.rs"
-
-[lib]
-name = "pathfinding"
-path = "src/lib.rs"
