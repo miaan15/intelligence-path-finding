@@ -1,5 +1,6 @@
 use crate::game::camera::CameraManager;
 use crate::game::map_renderer::MapRenderer;
+use crate::game::path_renderer::PathRenderer;
 use crate::game::ui::UIManager;
 use macroquad::prelude::*;
 
@@ -9,6 +10,8 @@ pub struct RenderConfig {
     pub obstacle_color: Color,
     pub pixel_per_unit: u32,
     pub font_size: f32,
+    pub path_color: Color,
+    pub path_thickness: f32,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -25,15 +28,22 @@ pub struct GameManager {
     state: GameState,
 
     map_renderer: Box<MapRenderer>,
+    path_renderer: Box<PathRenderer>,
     camera_manager: Box<CameraManager>,
     ui_manager: Box<UIManager>,
 }
 
 impl GameManager {
-    pub fn new(map_renderer: Box<MapRenderer>, camera_manager: Box<CameraManager>, ui_manager: Box<UIManager>) -> Self {
+    pub fn new(
+        map_renderer: Box<MapRenderer>,
+        path_renderer: Box<PathRenderer>,
+        camera_manager: Box<CameraManager>,
+        ui_manager: Box<UIManager>,
+    ) -> Self {
         Self {
             state: GameState::Idle,
             map_renderer,
+            path_renderer,
             camera_manager,
             ui_manager,
         }
@@ -50,6 +60,9 @@ impl GameManager {
 
     pub fn ui_manager(&self) -> &UIManager { self.ui_manager.as_ref() }
     pub fn ui_manager_mut(&mut self) -> &mut UIManager { self.ui_manager.as_mut() }
+
+    pub fn path_renderer(&self) -> &PathRenderer { self.path_renderer.as_ref() }
+    pub fn path_renderer_mut(&mut self) -> &mut PathRenderer { self.path_renderer.as_mut() }
 
     pub fn update(&mut self) {
         self.handle_input();
@@ -79,6 +92,7 @@ impl GameManager {
         self.map_renderer.draw();
         self.ui_manager
             .draw(&self.camera_manager.camera(), self.get_state_description());
+        self.path_renderer.draw();
     }
 
     pub fn get_state_description(&self) -> &'static str {

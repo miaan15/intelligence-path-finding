@@ -29,6 +29,14 @@ impl Grid {
         }
     }
 
+    pub fn width(&self) -> usize {
+        self.width
+    }
+
+    pub fn height(&self) -> usize {
+        self.height
+    }
+
     pub fn set(&mut self, x: usize, y: usize, val: GridNodeValue) -> Option<()> {
         let pos = self.get_grid_pos(x, y)?;
         self.data[pos] = val;

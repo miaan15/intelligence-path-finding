@@ -1,10 +1,15 @@
 use macroquad::prelude::*;
+use pathfinding::algorithm::a_star::AStarStrategy;
+use pathfinding::algorithm::problem::Problem;
+use pathfinding::algorithm::strategy::Strategy;
 use pathfinding::game::camera::*;
 use pathfinding::game::game::*;
 use pathfinding::game::map_renderer::*;
+use pathfinding::game::path_renderer::*;
 use pathfinding::game::ui::*;
 use pathfinding::world::grid::*;
 use pathfinding::world::WorldConfig;
+use std::sync::Arc;
 
 fn setup_grid(grid_map: &mut GridMap) {
     for x in 0..20 {
@@ -46,6 +51,8 @@ async fn main() {
         obstacle_color: RED,
         pixel_per_unit: 100,
         font_size: 80.0,
+        path_color: YELLOW,
+        path_thickness: 10.0,
     };
 
     // ==================================================================
@@ -56,6 +63,8 @@ async fn main() {
         let mut map_renderer = MapRenderer::new(render_config.clone());
         map_renderer.reset_mesh(&grid_map);
 
+        let path_renderer = PathRenderer::new(render_config.clone());
+
         let mut camera_manager = CameraManager::new();
         camera_manager.target_to_bound(
             vec2(0.0, 0.0),
@@ -65,8 +74,21 @@ async fn main() {
 
         let ui_manager = UIManager::new(render_config.font_size);
 
-        GameManager::new(Box::new(map_renderer), Box::new(camera_manager), Box::new(ui_manager))
+        GameManager::new(
+            Box::new(map_renderer),
+            Box::new(path_renderer),
+            Box::new(camera_manager),
+            Box::new(ui_manager),
+        )
     };
+    // ==================================================================
+    let problem = Problem {
+        grid_map: Arc::new(grid_map),
+        start: Vec2::new(150.0, 150.0),
+        end: Vec2::new(1500.0, 300.0),
+    };
+    let path_points = AStarStrategy::path_finding(&problem);
+    game_manager.path_renderer_mut().set_path(path_points.clone());
 
     // ==================================================================
     loop {
