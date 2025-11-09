@@ -1,10 +1,9 @@
-// Import from the local library
 use macroquad::prelude::*;
-use pathfinding::game::game_manager::GameManager;
-use pathfinding::game::grid_render::GridRenderer;
-use pathfinding::game::ui_manager::UIManager;
-use pathfinding::game::RenderConfig;
-use pathfinding::world::grid::{GridMap, GridNodeValue};
+use pathfinding::game::camera::*;
+use pathfinding::game::game::*;
+use pathfinding::game::map_renderer::*;
+use pathfinding::game::ui::*;
+use pathfinding::world::grid::*;
 use pathfinding::world::WorldConfig;
 
 fn setup_grid(grid_map: &mut GridMap) {
@@ -26,6 +25,7 @@ fn setup_grid(grid_map: &mut GridMap) {
     for x in 13..18 {
         grid_map.grid_mut().set(x, 7, GridNodeValue::Obstacle);
     }
+    grid_map.grid_mut().set(2, 12, GridNodeValue::Obstacle);
 
     grid_map.grid_mut().set(5, 4, GridNodeValue::Obstacle);
     grid_map.grid_mut().set(6, 4, GridNodeValue::Obstacle);
@@ -37,7 +37,7 @@ fn setup_grid(grid_map: &mut GridMap) {
 #[macroquad::main("Path Finding Demo")]
 async fn main() {
     let world_config = WorldConfig {
-        grid_size: (20, 15),
+        grid_size: (20, 20),
         cell_size: 40.0,
     };
 
@@ -47,19 +47,24 @@ async fn main() {
     };
 
     // ==================================================================
-    let mut grid_map = GridMap::new(20, 15, world_config);
+    let mut grid_map = GridMap::new(world_config.clone());
     setup_grid(&mut grid_map);
 
     let mut game_manager = {
-        let grid_renderer = GridRenderer::new(render_config);
-        GameManager::new(Box::new(grid_renderer))
+        let mut map_renderer = MapRenderer::new(render_config);
+        map_renderer.reset_mesh(&grid_map);
+
+        let mut camera_manager = CameraManager::new();
+        camera_manager.target_to_bound(
+            vec2(0.0, 0.0),
+            vec2(map_renderer.max_bound().x, map_renderer.max_bound().y),
+            0.5,
+        );
+
+        GameManager::new(Box::new(map_renderer), Box::new(camera_manager))
     };
 
-    let ui_manager = UIManager::new();
-
     // ==================================================================
-    game_manager.get_renderer_mut().update_mesh(&grid_map);
-    game_manager.update_camera_dimensions(&grid_map);
 
     loop {
         if is_key_pressed(KeyCode::Escape) {
@@ -68,21 +73,11 @@ async fn main() {
 
         clear_background(BLACK);
 
-        let (screen_width, screen_height) = game_manager.get_screen_dimensions();
-        set_camera(&game_manager.setup_camera());
+        set_camera(game_manager.camera_manager().camera());
 
         game_manager.update();
 
-        game_manager.get_renderer().draw();
-
         set_default_camera();
-
-        ui_manager.draw_ui(
-            screen_width,
-            screen_height,
-            game_manager.get_state(),
-            game_manager.get_state_description(),
-        );
 
         next_frame().await;
     }

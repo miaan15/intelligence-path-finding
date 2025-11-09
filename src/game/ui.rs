@@ -1,4 +1,4 @@
-use crate::game::game_manager::GameState;
+use crate::game::game::GameState;
 use macroquad::prelude::*;
 
 pub struct UIManager {

@@ -1,6 +1,12 @@
-use crate::game::grid_render::GridRenderer;
-use crate::world::grid::GridMap;
+use crate::game::camera::CameraManager;
+use crate::game::map_renderer::MapRenderer;
 use macroquad::prelude::*;
+
+#[derive(Debug, Clone)]
+pub struct RenderConfig {
+    pub background_color: Color,
+    pub obstacle_color: Color,
+}
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum GameState {
@@ -13,46 +19,35 @@ pub enum GameState {
 }
 
 pub struct GameManager {
-    map_renderer: Box<GridRenderer>,
     state: GameState,
-    camera_zoom: f32,
-    screen_width: f32,
-    screen_height: f32,
+
+    map_renderer: Box<MapRenderer>,
+    camera_manager: Box<CameraManager>,
 }
 
 impl GameManager {
-    pub fn new(map: Box<GridRenderer>) -> Self {
+    pub fn new(map_renderer: Box<MapRenderer>, camera_manager: Box<CameraManager>) -> Self {
         Self {
-            map_renderer: map,
             state: GameState::Idle,
-            camera_zoom: 1.0,
-            screen_width: 0.0,
-            screen_height: 0.0,
+            map_renderer,
+            camera_manager,
         }
     }
 
     pub fn get_state(&self) -> GameState { self.state }
     pub fn set_state(&mut self, state: GameState) { self.state = state; }
 
-    pub fn get_renderer(&self) -> &GridRenderer { self.map_renderer.as_ref() }
-    pub fn get_renderer_mut(&mut self) -> &mut GridRenderer { self.map_renderer.as_mut() }
+    pub fn map_renderer(&self) -> &MapRenderer { self.map_renderer.as_ref() }
+    pub fn map_renderer_mut(&mut self) -> &mut MapRenderer { self.map_renderer.as_mut() }
 
-    pub fn update_camera_dimensions(&mut self, grid_map: &GridMap) {
-        self.screen_width = grid_map.width() as f32 * grid_map.cell_size();
-        self.screen_height = grid_map.height() as f32 * grid_map.cell_size();
+    pub fn camera_manager(&self) -> &CameraManager { self.camera_manager.as_ref() }
+    pub fn camera_manager_mut(&mut self) -> &mut CameraManager { self.camera_manager.as_mut() }
+
+    pub fn update(&mut self) {
+        self.handle_input();
+
+        self.render();
     }
-
-    pub fn get_screen_dimensions(&self) -> (f32, f32) { (self.screen_width, self.screen_height) }
-
-    pub fn setup_camera(&self) -> Camera2D {
-        Camera2D {
-            target: vec2(self.screen_width / 2.0, self.screen_height / 2.0),
-            zoom: vec2(1.0 / self.screen_width, -1.0 / self.screen_height) * self.camera_zoom,
-            ..Default::default()
-        }
-    }
-
-    pub fn update(&mut self) { self.handle_input(); }
 
     fn handle_input(&mut self) {
         if is_key_pressed(KeyCode::Key1) {
@@ -70,13 +65,11 @@ impl GameManager {
         if is_key_pressed(KeyCode::C) {
             self.set_state(GameState::Idle);
         }
+    }
 
-        // Camera zoom controls
-        if is_key_down(KeyCode::Up) {
-            self.camera_zoom *= 1.02;
-        }
-        if is_key_down(KeyCode::Down) {
-            self.camera_zoom /= 1.02;
+    fn render(&self) {
+        if let Some(mesh) = self.map_renderer().mesh() {
+            draw_mesh(mesh);
         }
     }
 

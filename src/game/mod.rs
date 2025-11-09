@@ -1,11 +1,6 @@
-pub mod game_manager;
-pub mod grid_render;
-pub mod ui_manager;
+pub mod camera;
+pub mod game;
+pub mod map_renderer;
+pub mod ui;
 
 use macroquad::prelude::*;
-
-#[derive(Debug, Clone)]
-pub struct RenderConfig {
-    pub background_color: Color,
-    pub obstacle_color: Color,
-}

@@ -55,8 +55,8 @@ impl Grid {
 }
 
 impl GridMap {
-    pub fn new(width: usize, height: usize, config: WorldConfig) -> Self {
-        let grid = Grid::new(width, height);
+    pub fn new(config: WorldConfig) -> Self {
+        let grid = Grid::new(config.grid_size.0, config.grid_size.1);
         Self {
             grid: Box::new(grid),
             config: config,
