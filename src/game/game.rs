@@ -1,11 +1,13 @@
 use crate::game::camera::CameraManager;
 use crate::game::map_renderer::MapRenderer;
+use crate::game::ui::UIManager;
 use macroquad::prelude::*;
 
 #[derive(Debug, Clone)]
 pub struct RenderConfig {
     pub background_color: Color,
     pub obstacle_color: Color,
+    pub pixel_per_unit: u32,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -23,14 +25,16 @@ pub struct GameManager {
 
     map_renderer: Box<MapRenderer>,
     camera_manager: Box<CameraManager>,
+    ui_manager: Box<UIManager>,
 }
 
 impl GameManager {
-    pub fn new(map_renderer: Box<MapRenderer>, camera_manager: Box<CameraManager>) -> Self {
+    pub fn new(map_renderer: Box<MapRenderer>, camera_manager: Box<CameraManager>, ui_manager: Box<UIManager>) -> Self {
         Self {
             state: GameState::Idle,
             map_renderer,
             camera_manager,
+            ui_manager,
         }
     }
 
@@ -42,6 +46,9 @@ impl GameManager {
 
     pub fn camera_manager(&self) -> &CameraManager { self.camera_manager.as_ref() }
     pub fn camera_manager_mut(&mut self) -> &mut CameraManager { self.camera_manager.as_mut() }
+
+    pub fn ui_manager(&self) -> &UIManager { self.ui_manager.as_ref() }
+    pub fn ui_manager_mut(&mut self) -> &mut UIManager { self.ui_manager.as_mut() }
 
     pub fn update(&mut self) {
         self.handle_input();
@@ -68,9 +75,9 @@ impl GameManager {
     }
 
     fn render(&self) {
-        if let Some(mesh) = self.map_renderer().mesh() {
-            draw_mesh(mesh);
-        }
+        self.map_renderer.draw();
+        self.ui_manager
+            .draw(&self.camera_manager.camera(), self.get_state_description());
     }
 
     pub fn get_state_description(&self) -> &'static str {

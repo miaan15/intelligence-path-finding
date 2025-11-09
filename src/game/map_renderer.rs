@@ -23,14 +23,15 @@ impl MapRenderer {
         let mut vertices = Vec::new();
         let mut indices = Vec::new();
 
+        let ppu = self.config.pixel_per_unit;
         for y in 0..map.height() {
             for x in 0..map.width() {
                 if let Some(GridNodeValue::Obstacle) = map.grid().get(x, y) {
-                    let world_x = x as f32;
-                    let world_y = y as f32;
+                    let world_x = x as f32 * ppu as f32;
+                    let world_y = y as f32 * ppu as f32;
 
-                    self.max_bound.x = self.max_bound.x.max(world_x + 1.0);
-                    self.max_bound.y = self.max_bound.y.max(world_y + 1.0);
+                    self.max_bound.x = self.max_bound.x.max(world_x + ppu as f32);
+                    self.max_bound.y = self.max_bound.y.max(world_y + ppu as f32);
 
                     let vertex_offset = vertices.len() as u16;
                     vertices.push(Vertex {
@@ -40,19 +41,19 @@ impl MapRenderer {
                         color: self.config.obstacle_color.into(),
                     });
                     vertices.push(Vertex {
-                        position: Vec3::new(world_x + 1.0, world_y, 0.0),
+                        position: Vec3::new(world_x + ppu as f32, world_y, 0.0),
                         normal: Vec4::new(0.0, 0.0, 1.0, 1.0),
                         uv: Vec2::new(1.0, 1.0),
                         color: self.config.obstacle_color.into(),
                     });
                     vertices.push(Vertex {
-                        position: Vec3::new(world_x + 1.0, world_y + 1.0, 0.0),
+                        position: Vec3::new(world_x + ppu as f32, world_y + ppu as f32, 0.0),
                         normal: Vec4::new(0.0, 0.0, 1.0, 1.0),
                         uv: Vec2::new(1.0, 0.0),
                         color: self.config.obstacle_color.into(),
                     });
                     vertices.push(Vertex {
-                        position: Vec3::new(world_x, world_y + 1.0, 0.0),
+                        position: Vec3::new(world_x, world_y + ppu as f32, 0.0),
                         normal: Vec4::new(0.0, 0.0, 1.0, 1.0),
                         uv: Vec2::new(0.0, 0.0),
                         color: self.config.obstacle_color.into(),
@@ -78,6 +79,12 @@ impl MapRenderer {
             self.mesh = Some(mesh);
         } else {
             self.mesh = None;
+        }
+    }
+
+    pub fn draw(&self) {
+        if let Some(mesh) = self.mesh.as_ref() {
+            draw_mesh(mesh);
         }
     }
 

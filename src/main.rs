@@ -44,6 +44,7 @@ async fn main() {
     let render_config = RenderConfig {
         background_color: DARKGRAY,
         obstacle_color: RED,
+        pixel_per_unit: 100,
     };
 
     // ==================================================================
@@ -61,11 +62,12 @@ async fn main() {
             0.5,
         );
 
-        GameManager::new(Box::new(map_renderer), Box::new(camera_manager))
+        let ui_manager = UIManager::new(75.0);
+
+        GameManager::new(Box::new(map_renderer), Box::new(camera_manager), Box::new(ui_manager))
     };
 
     // ==================================================================
-
     loop {
         if is_key_pressed(KeyCode::Escape) {
             break;
