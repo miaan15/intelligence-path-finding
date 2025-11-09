@@ -36,4 +36,17 @@ impl CameraManager {
         self.camera.zoom = vec2(fit_zoom, fit_zoom * width_to_height);
         self.camera.target = center;
     }
+
+    pub fn screen_to_world(&self, screen_pos: (f32, f32)) -> Vec2 {
+        let screen_width = screen_width();
+        let screen_height = screen_height();
+
+        let normalized_x = (screen_pos.0 / screen_width) * 2.0 - 1.0;
+        let normalized_y = (screen_pos.1 / screen_height) * 2.0 - 1.0;
+
+        let world_x = normalized_x / self.camera.zoom.x + self.camera.target.x;
+        let world_y = normalized_y / self.camera.zoom.y + self.camera.target.y;
+
+        vec2(world_x, world_y)
+    }
 }

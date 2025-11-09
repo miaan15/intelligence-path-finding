@@ -8,6 +8,7 @@ pub struct RenderConfig {
     pub background_color: Color,
     pub obstacle_color: Color,
     pub pixel_per_unit: u32,
+    pub font_size: f32,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]

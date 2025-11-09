@@ -38,13 +38,14 @@ fn setup_grid(grid_map: &mut GridMap) {
 async fn main() {
     let world_config = WorldConfig {
         grid_size: (20, 20),
-        cell_size: 40.0,
+        cell_size: 100.0,
     };
 
     let render_config = RenderConfig {
         background_color: DARKGRAY,
         obstacle_color: RED,
         pixel_per_unit: 100,
+        font_size: 80.0,
     };
 
     // ==================================================================
@@ -52,7 +53,7 @@ async fn main() {
     setup_grid(&mut grid_map);
 
     let mut game_manager = {
-        let mut map_renderer = MapRenderer::new(render_config);
+        let mut map_renderer = MapRenderer::new(render_config.clone());
         map_renderer.reset_mesh(&grid_map);
 
         let mut camera_manager = CameraManager::new();
@@ -62,7 +63,7 @@ async fn main() {
             0.5,
         );
 
-        let ui_manager = UIManager::new(75.0);
+        let ui_manager = UIManager::new(render_config.font_size);
 
         GameManager::new(Box::new(map_renderer), Box::new(camera_manager), Box::new(ui_manager))
     };
