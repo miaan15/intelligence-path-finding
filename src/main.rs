@@ -7,42 +7,24 @@ use pathfinding::game::game::*;
 use pathfinding::game::map_renderer::*;
 use pathfinding::game::path_renderer::*;
 use pathfinding::game::ui::*;
-use pathfinding::world::grid::*;
+use pathfinding::gridmaker::setup_grid;
 use pathfinding::world::WorldConfig;
+use pathfinding::world::grid::*;
 use std::sync::Arc;
 
-fn setup_grid(grid_map: &mut GridMap) {
-    for x in 0..20 {
-        grid_map.grid_mut().set(x, 0, GridNodeValue::Obstacle);
-        grid_map.grid_mut().set(x, 14, GridNodeValue::Obstacle);
+fn window_conf() -> Conf {
+    Conf {
+        window_title: "T1 vo dich".to_string(),
+        window_width: 800,
+        window_height: 900,
+        ..Default::default()
     }
-    for y in 0..15 {
-        grid_map.grid_mut().set(0, y, GridNodeValue::Obstacle);
-        grid_map.grid_mut().set(19, y, GridNodeValue::Obstacle);
-    }
-    for y in 3..12 {
-        grid_map.grid_mut().set(8, y, GridNodeValue::Obstacle);
-        grid_map.grid_mut().set(12, y, GridNodeValue::Obstacle);
-    }
-    for x in 2..8 {
-        grid_map.grid_mut().set(x, 7, GridNodeValue::Obstacle);
-    }
-    for x in 13..18 {
-        grid_map.grid_mut().set(x, 7, GridNodeValue::Obstacle);
-    }
-    grid_map.grid_mut().set(2, 12, GridNodeValue::Obstacle);
-
-    grid_map.grid_mut().set(5, 4, GridNodeValue::Obstacle);
-    grid_map.grid_mut().set(6, 4, GridNodeValue::Obstacle);
-    grid_map.grid_mut().set(14, 10, GridNodeValue::Obstacle);
-    grid_map.grid_mut().set(15, 10, GridNodeValue::Obstacle);
-    grid_map.grid_mut().set(16, 10, GridNodeValue::Obstacle);
 }
 
-#[macroquad::main("Path Finding Demo")]
+#[macroquad::main(window_conf)]
 async fn main() {
     let world_config = WorldConfig {
-        grid_size: (20, 20),
+        grid_size: (36, 36),
         cell_size: 100.0,
     };
 
@@ -50,9 +32,9 @@ async fn main() {
         background_color: DARKGRAY,
         obstacle_color: RED,
         pixel_per_unit: 100,
-        font_size: 80.0,
+        font_size: 200.0,
         path_color: YELLOW,
-        path_thickness: 10.0,
+        path_thickness: 15.0,
     };
 
     // ==================================================================
@@ -69,7 +51,7 @@ async fn main() {
         camera_manager.target_to_bound(
             vec2(0.0, 0.0),
             vec2(map_renderer.max_bound().x, map_renderer.max_bound().y),
-            0.5,
+            0.8,
         );
 
         let ui_manager = UIManager::new(render_config.font_size);
@@ -82,13 +64,10 @@ async fn main() {
         )
     };
     // ==================================================================
-    let problem = Problem {
-        grid_map: Arc::new(grid_map),
-        start: Vec2::new(150.0, 150.0),
-        end: Vec2::new(1500.0, 300.0),
-    };
-    let path_points = AStarStrategy::path_finding(&problem);
-    game_manager.path_renderer_mut().set_path(path_points.clone());
+    // let test_case = 15;
+    // let problem = create_problem_with_testcase(Arc::new(grid_map), test_case);
+    // let path_points = AStarStrategy::path_finding(&problem);
+    // game_manager.path_renderer_mut().set_path(path_points.clone());
 
     // ==================================================================
     loop {

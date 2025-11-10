@@ -72,7 +72,6 @@ impl ProbeDirection {
 }
 impl AStarStrategy {
     const STEP_SIZE: f32 = 10.0;
-    const ANGLE_SAMPLES: usize = 8;
 
     fn heuristic(a: Vec2, b: Vec2) -> f32 {
         a.distance(b)
@@ -122,25 +121,34 @@ impl Strategy for AStarStrategy {
         let goal = problem.end();
 
         let mut queue = BinaryHeap::new();
-        let mut map = HashMap::new();
+        let mut g_costs: HashMap<(u32, u32), f32> = HashMap::new();
+        let mut predecessors: HashMap<(u32, u32), Vec2> = HashMap::new();
 
         let start_node = Node {
             pos: start,
             pre: None,
             g: 0.0,
-            h: 0.0,
+            h: AStarStrategy::heuristic(start, goal),
         };
         queue.push(start_node);
-        map.insert(start_node, 0.0);
+
+        let start_key = (start.x.to_bits(), start.y.to_bits());
+        g_costs.insert(start_key, 0.0);
 
         let mut goal_node: Option<Node> = None;
-        while !queue.is_empty() {
-            let cur = match queue.pop() {
-                Some(value) => value,
-                None => break,
-            };
+
+        while let Some(cur) = queue.pop() {
+            let cur_key = (cur.pos.x.to_bits(), cur.pos.y.to_bits());
+
+            if let Some(&best_g) = g_costs.get(&cur_key) {
+                if cur.g > best_g {
+                    continue;
+                }
+            }
 
             if AStarStrategy::has_line_of_sight(cur.pos, goal, grid_map) {
+                let goal_key = (goal.x.to_bits(), goal.y.to_bits());
+                predecessors.insert(goal_key, cur.pos);
                 goal_node = Some(Node {
                     pos: goal,
                     pre: Some(cur.pos),
@@ -151,30 +159,47 @@ impl Strategy for AStarStrategy {
             }
 
             for dir in ProbeDirection::iter() {
-                let new_pos = AStarStrategy::get_new_pos(cur.pos, dir.clone(), grid_map);
+                let new_pos = AStarStrategy::get_new_pos(cur.pos, *dir, grid_map);
                 let new_dist = new_pos.distance(cur.pos);
-                let new = Node {
-                    pos: new_pos,
-                    pre: Some(cur.pos),
-                    g: cur.g + new_dist,
-                    h: new_pos.distance(goal),
-                };
+                let new_g = cur.g + new_dist;
+                let new_key = (new_pos.x.to_bits(), new_pos.y.to_bits());
 
-                if let Some(new_g) = map.get(&new) {
-                    if new_g.into() > cur.g + new_dist {
-                        queue.push(new);
-                        map.insert(new, cur.g + new_dist);
-                    }
-                } else {
-                    queue.push(new);
-                    map.insert(new, cur.g + new_dist);
+                let should_process = g_costs.get(&new_key).map_or(true, |&existing_g| new_g < existing_g);
+
+                if should_process {
+                    let new_node = Node {
+                        pos: new_pos,
+                        pre: Some(cur.pos),
+                        g: new_g,
+                        h: AStarStrategy::heuristic(new_pos, goal),
+                    };
+
+                    queue.push(new_node);
+                    g_costs.insert(new_key, new_g);
+                    predecessors.insert(new_key, cur.pos);
                 }
             }
         }
 
-        if goal_node.is_none() {
-            Vec::new()
+        if let Some(goal) = goal_node {
+            let mut path = Vec::new();
+            let mut current = goal.pos;
+            path.push(current);
+
+            while current != start {
+                let cur_key = (current.x.to_bits(), current.y.to_bits());
+                if let Some(&prev) = predecessors.get(&cur_key) {
+                    path.push(prev);
+                    current = prev;
+                } else {
+                    return Vec::new();
+                }
+            }
+
+            path.reverse();
+            path
         } else {
+            Vec::new()
         }
     }
 }

@@ -38,36 +38,29 @@ impl UIManager {
             let y = screen_bottom_left.y - 1.0 * line_height - offset;
 
             draw_text(
-                "[1] Add Tile",
+                "[S] Set Start",
                 x + line_width * 0.0,
                 y + line_height * 0.0,
                 self.font_size,
                 WHITE,
             );
             draw_text(
-                "[2] Remove Tile",
+                "[E] Set End",
                 x + line_width * 0.0,
                 y + line_height * 1.0,
                 self.font_size,
                 WHITE,
             );
             draw_text(
-                "[3] Set Start",
+                "[G] GO GO",
                 x + line_width * 1.0,
                 y + line_height * 0.0,
-                self.font_size,
-                WHITE,
-            );
-            draw_text(
-                "[4] Set End",
-                x + line_width * 1.0,
-                y + line_height * 1.0,
                 self.font_size,
                 WHITE,
             );
             draw_text(
                 "[C] Cancel",
-                x + line_width * 2.0,
+                x + line_width * 1.0,
                 y + line_height * 1.0,
                 self.font_size,
                 WHITE,
@@ -75,8 +68,16 @@ impl UIManager {
         }
     }
 
-    pub fn toggle_controls(&mut self) { self.show_controls = !self.show_controls; }
-    pub fn toggle_state(&mut self) { self.show_state = !self.show_state; }
-    pub fn set_controls_visible(&mut self, visible: bool) { self.show_controls = visible; }
-    pub fn set_state_visible(&mut self, visible: bool) { self.show_state = visible; }
+    pub fn toggle_controls(&mut self) {
+        self.show_controls = !self.show_controls;
+    }
+    pub fn toggle_state(&mut self) {
+        self.show_state = !self.show_state;
+    }
+    pub fn set_controls_visible(&mut self, visible: bool) {
+        self.show_controls = visible;
+    }
+    pub fn set_state_visible(&mut self, visible: bool) {
+        self.show_state = visible;
+    }
 }
