@@ -1,7 +1,4 @@
 use macroquad::prelude::*;
-use pathfinding::algorithm::a_star::AStarStrategy;
-use pathfinding::algorithm::problem::Problem;
-use pathfinding::algorithm::strategy::Strategy;
 use pathfinding::game::camera::*;
 use pathfinding::game::game::*;
 use pathfinding::game::map_renderer::*;

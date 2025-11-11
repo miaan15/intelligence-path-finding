@@ -49,28 +49,49 @@ pub fn setup_grid(grid_map: &mut GridMap) {
     // Top-left to center
     for i in 0..8 {
         grid_map.grid_mut().set(5 + i, 5 + i, GridNodeValue::Obstacle);
+        grid_map.grid_mut().set(4 + i, 5 + i, GridNodeValue::Obstacle);
     }
 
     // Top-right to center
     for i in 0..8 {
         grid_map.grid_mut().set(30 - i, 5 + i, GridNodeValue::Obstacle);
+        grid_map.grid_mut().set(29 - i, 5 + i, GridNodeValue::Obstacle);
     }
 
     // Bottom-left to center
     for i in 0..8 {
         grid_map.grid_mut().set(5 + i, 30 - i, GridNodeValue::Obstacle);
+        grid_map.grid_mut().set(4 + i, 30 - i, GridNodeValue::Obstacle);
     }
 
     // Bottom-right to center
     for i in 0..8 {
         grid_map.grid_mut().set(30 - i, 30 - i, GridNodeValue::Obstacle);
+        grid_map.grid_mut().set(29 - i, 30 - i, GridNodeValue::Obstacle);
     }
 
     // === CENTRAL OBSTACLE ===
-    for x in 16..20 {
-        for y in 16..20 {
+    for x in 17..19 {
+        for y in 17..19 {
             grid_map.grid_mut().set(x, y, GridNodeValue::Obstacle);
         }
+    }
+
+    for x in 10..21 {
+        grid_map.grid_mut().set(x, 15, GridNodeValue::Obstacle);
+    }
+    for y in 16..20 {
+        grid_map.grid_mut().set(15, y, GridNodeValue::Obstacle);
+    }
+    for x in 14..22 {
+        grid_map.grid_mut().set(x, 21, GridNodeValue::Obstacle);
+    }
+    for y in 16..20 {
+        grid_map.grid_mut().set(22, y, GridNodeValue::Obstacle);
+    }
+
+    for x in 23..30 {
+        grid_map.grid_mut().set(x, 16, GridNodeValue::Obstacle);
     }
 
     // === CORNER OBSTACLES ===
