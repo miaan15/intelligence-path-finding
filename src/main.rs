@@ -21,7 +21,7 @@ fn window_conf() -> Conf {
 #[macroquad::main(window_conf)]
 async fn main() {
     let world_config = WorldConfig {
-        grid_size: (36, 36),
+        grid_size: (25, 25),
         cell_size: 100.0,
     };
 
@@ -29,12 +29,12 @@ async fn main() {
         background_color: DARKGRAY,
         obstacle_color: RED,
         pixel_per_unit: 100,
-        font_size: 200.0,
+        font_size: 100.0,
         path_color: YELLOW,
-        path_thickness: 15.0,
+        path_thickness: 10.0,
         start_color: GREEN,
         end_color: BLUE,
-        marker_radius: 50.0,
+        marker_radius: 20.0,
     };
 
     // ==================================================================

@@ -1,10 +1,10 @@
+use crate::algorithm::a_star::AStarStrategy;
+use crate::algorithm::problem::Problem;
+use crate::algorithm::strategy::Strategy;
 use crate::game::camera::CameraManager;
 use crate::game::map_renderer::MapRenderer;
 use crate::game::path_renderer::PathRenderer;
 use crate::game::ui::UIManager;
-use crate::algorithm::problem::Problem;
-use crate::algorithm::a_star::AStarStrategy;
-use crate::algorithm::strategy::Strategy;
 use macroquad::prelude::*;
 use std::sync::{Arc, mpsc};
 use std::thread;
@@ -163,15 +163,18 @@ impl GameManager {
         }
 
         // Handle mouse clicks for setting start and end positions
+        let roundup = 25.0;
         if is_mouse_button_pressed(MouseButton::Left) {
             match self.state {
                 GameState::SetStart => {
-                    let world_pos = self.camera_manager.screen_to_world(mouse_position());
+                    let mut world_pos = self.camera_manager.screen_to_world(mouse_position());
+                    world_pos = (world_pos / roundup).floor() * roundup;
                     self.start_pos = Some(world_pos);
                     self.set_state(GameState::Idle);
                 }
                 GameState::SetEnd => {
-                    let world_pos = self.camera_manager.screen_to_world(mouse_position());
+                    let mut world_pos = self.camera_manager.screen_to_world(mouse_position());
+                    world_pos = (world_pos / roundup).floor() * roundup;
                     self.end_pos = Some(world_pos);
                     self.set_state(GameState::Idle);
                 }
