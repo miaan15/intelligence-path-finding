@@ -35,6 +35,9 @@ async fn main() {
         font_size: 200.0,
         path_color: YELLOW,
         path_thickness: 15.0,
+        start_color: GREEN,
+        end_color: BLUE,
+        marker_radius: 50.0,
     };
 
     // ==================================================================
@@ -61,6 +64,7 @@ async fn main() {
             Box::new(path_renderer),
             Box::new(camera_manager),
             Box::new(ui_manager),
+            render_config,
         )
     };
     // ==================================================================
