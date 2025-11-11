@@ -14,9 +14,13 @@ impl PathRenderer {
         }
     }
 
-    pub fn set_path(&mut self, path_points: Vec<Vec2>) { self.path_points = Some(path_points); }
+    pub fn set_path(&mut self, path_points: Vec<Vec2>) {
+        self.path_points = Some(path_points);
+    }
 
-    pub fn unset_path(&mut self) { self.path_points = None; }
+    pub fn unset_path(&mut self) {
+        self.path_points = None;
+    }
 
     pub fn draw(&self) {
         if let Some(path) = &self.path_points {
@@ -33,10 +37,6 @@ impl PathRenderer {
                     self.config.path_thickness,
                     self.config.path_color,
                 );
-            }
-
-            for &point in path {
-                draw_circle(point.x, point.y, self.config.path_thickness, self.config.path_color);
             }
         }
     }

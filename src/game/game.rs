@@ -2,7 +2,12 @@ use crate::game::camera::CameraManager;
 use crate::game::map_renderer::MapRenderer;
 use crate::game::path_renderer::PathRenderer;
 use crate::game::ui::UIManager;
+use crate::algorithm::problem::Problem;
+use crate::algorithm::a_star::AStarStrategy;
+use crate::algorithm::strategy::Strategy;
 use macroquad::prelude::*;
+use std::sync::{Arc, mpsc};
+use std::thread;
 
 #[derive(Debug, Clone)]
 pub struct RenderConfig {
@@ -30,6 +35,8 @@ pub struct GameManager {
     start_pos: Option<Vec2>,
     end_pos: Option<Vec2>,
     render_config: RenderConfig,
+    pathfinding_receiver: Option<mpsc::Receiver<Vec<Vec2>>>,
+    grid_map: Arc<crate::world::grid::GridMap>,
 
     map_renderer: Box<MapRenderer>,
     path_renderer: Box<PathRenderer>,
@@ -44,12 +51,15 @@ impl GameManager {
         camera_manager: Box<CameraManager>,
         ui_manager: Box<UIManager>,
         render_config: RenderConfig,
+        grid_map: Arc<crate::world::grid::GridMap>,
     ) -> Self {
         Self {
             state: GameState::Idle,
             start_pos: None,
             end_pos: None,
             render_config,
+            pathfinding_receiver: None,
+            grid_map,
             map_renderer,
             path_renderer,
             camera_manager,
@@ -100,7 +110,33 @@ impl GameManager {
         self.end_pos
     }
 
+    fn start_pathfinding(&mut self) {
+        if let (Some(start), Some(end)) = (self.start_pos, self.end_pos) {
+            self.set_state(GameState::Loading);
+
+            let (sender, receiver) = mpsc::channel();
+            self.pathfinding_receiver = Some(receiver);
+
+            let grid_map = Arc::clone(&self.grid_map);
+
+            thread::spawn(move || {
+                let problem = Problem::new(grid_map, start, end);
+                let path = AStarStrategy::path_finding(&problem);
+                let _ = sender.send(path);
+            });
+        }
+    }
+
     pub fn update(&mut self) {
+        // Check if we have a pending pathfinding result
+        if let Some(receiver) = &mut self.pathfinding_receiver {
+            if let Ok(path) = receiver.try_recv() {
+                self.path_renderer_mut().set_path(path);
+                self.pathfinding_receiver = None;
+                self.set_state(GameState::Idle);
+            }
+        }
+
         self.handle_input();
 
         self.render();
@@ -108,7 +144,9 @@ impl GameManager {
 
     fn handle_input(&mut self) {
         if is_key_pressed(KeyCode::G) {
-            self.set_state(GameState::Loading);
+            if self.start_pos.is_some() && self.end_pos.is_some() {
+                self.start_pathfinding();
+            }
         }
         if is_key_pressed(KeyCode::S) {
             self.set_state(GameState::SetStart);
@@ -118,6 +156,7 @@ impl GameManager {
         }
         if is_key_pressed(KeyCode::C) {
             self.set_state(GameState::Idle);
+            self.path_renderer_mut().unset_path();
         }
 
         // Handle mouse clicks for setting start and end positions

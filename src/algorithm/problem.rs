@@ -9,6 +9,14 @@ pub struct Problem {
 }
 
 impl Problem {
+    pub fn new(grid_map: Arc<GridMap>, start: Vec2, end: Vec2) -> Self {
+        Self {
+            grid_map,
+            start,
+            end,
+        }
+    }
+
     pub fn grid_map(&self) -> &GridMap { &self.grid_map }
 
     pub fn start(&self) -> Vec2 { self.start }

@@ -58,6 +58,7 @@ async fn main() {
         );
 
         let ui_manager = UIManager::new(render_config.font_size);
+        let grid_map_arc = Arc::new(grid_map);
 
         GameManager::new(
             Box::new(map_renderer),
@@ -65,6 +66,7 @@ async fn main() {
             Box::new(camera_manager),
             Box::new(ui_manager),
             render_config,
+            grid_map_arc,
         )
     };
     // ==================================================================
