@@ -18,8 +18,6 @@ pub struct RenderConfig {
 pub enum GameState {
     Idle,
     Loading,
-    AddTile,
-    RemoveTile,
     SetStart,
     SetEnd,
 }
@@ -49,20 +47,40 @@ impl GameManager {
         }
     }
 
-    pub fn get_state(&self) -> GameState { self.state }
-    pub fn set_state(&mut self, state: GameState) { self.state = state; }
+    pub fn get_state(&self) -> GameState {
+        self.state
+    }
+    pub fn set_state(&mut self, state: GameState) {
+        self.state = state;
+    }
 
-    pub fn map_renderer(&self) -> &MapRenderer { self.map_renderer.as_ref() }
-    pub fn map_renderer_mut(&mut self) -> &mut MapRenderer { self.map_renderer.as_mut() }
+    pub fn map_renderer(&self) -> &MapRenderer {
+        self.map_renderer.as_ref()
+    }
+    pub fn map_renderer_mut(&mut self) -> &mut MapRenderer {
+        self.map_renderer.as_mut()
+    }
 
-    pub fn camera_manager(&self) -> &CameraManager { self.camera_manager.as_ref() }
-    pub fn camera_manager_mut(&mut self) -> &mut CameraManager { self.camera_manager.as_mut() }
+    pub fn camera_manager(&self) -> &CameraManager {
+        self.camera_manager.as_ref()
+    }
+    pub fn camera_manager_mut(&mut self) -> &mut CameraManager {
+        self.camera_manager.as_mut()
+    }
 
-    pub fn ui_manager(&self) -> &UIManager { self.ui_manager.as_ref() }
-    pub fn ui_manager_mut(&mut self) -> &mut UIManager { self.ui_manager.as_mut() }
+    pub fn ui_manager(&self) -> &UIManager {
+        self.ui_manager.as_ref()
+    }
+    pub fn ui_manager_mut(&mut self) -> &mut UIManager {
+        self.ui_manager.as_mut()
+    }
 
-    pub fn path_renderer(&self) -> &PathRenderer { self.path_renderer.as_ref() }
-    pub fn path_renderer_mut(&mut self) -> &mut PathRenderer { self.path_renderer.as_mut() }
+    pub fn path_renderer(&self) -> &PathRenderer {
+        self.path_renderer.as_ref()
+    }
+    pub fn path_renderer_mut(&mut self) -> &mut PathRenderer {
+        self.path_renderer.as_mut()
+    }
 
     pub fn update(&mut self) {
         self.handle_input();
@@ -71,16 +89,13 @@ impl GameManager {
     }
 
     fn handle_input(&mut self) {
-        if is_key_pressed(KeyCode::Key1) {
-            self.set_state(GameState::AddTile);
+        if is_key_pressed(KeyCode::G) {
+            self.set_state(GameState::Loading);
         }
-        if is_key_pressed(KeyCode::Key2) {
-            self.set_state(GameState::RemoveTile);
-        }
-        if is_key_pressed(KeyCode::Key3) {
+        if is_key_pressed(KeyCode::S) {
             self.set_state(GameState::SetStart);
         }
-        if is_key_pressed(KeyCode::Key4) {
+        if is_key_pressed(KeyCode::E) {
             self.set_state(GameState::SetEnd);
         }
         if is_key_pressed(KeyCode::C) {
@@ -99,10 +114,8 @@ impl GameManager {
         match self.state {
             GameState::Idle => "Idle",
             GameState::Loading => "Loading...",
-            GameState::AddTile => "Add obstacles",
-            GameState::RemoveTile => "Remove obstacles",
-            GameState::SetStart => "Set start",
-            GameState::SetEnd => "Set end",
+            GameState::SetStart => "Set Start",
+            GameState::SetEnd => "Set End",
         }
     }
 }
