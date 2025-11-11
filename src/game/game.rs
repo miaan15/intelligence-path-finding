@@ -113,6 +113,7 @@ impl GameManager {
     fn start_pathfinding(&mut self) {
         if let (Some(start), Some(end)) = (self.start_pos, self.end_pos) {
             self.set_state(GameState::Loading);
+            self.ui_manager_mut().start_timer();
 
             let (sender, receiver) = mpsc::channel();
             self.pathfinding_receiver = Some(receiver);
@@ -132,6 +133,7 @@ impl GameManager {
         if let Some(receiver) = &mut self.pathfinding_receiver {
             if let Ok(path) = receiver.try_recv() {
                 self.path_renderer_mut().set_path(path);
+                self.ui_manager_mut().stop_timer();
                 self.pathfinding_receiver = None;
                 self.set_state(GameState::Idle);
             }
@@ -157,6 +159,7 @@ impl GameManager {
         if is_key_pressed(KeyCode::C) {
             self.set_state(GameState::Idle);
             self.path_renderer_mut().unset_path();
+            self.ui_manager_mut().reset_timer();
         }
 
         // Handle mouse clicks for setting start and end positions
