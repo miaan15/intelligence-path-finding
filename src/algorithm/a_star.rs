@@ -115,7 +115,7 @@ impl AStarStrategy {
 }
 
 impl Strategy for AStarStrategy {
-    fn path_finding(problem: &Problem) -> Vec<Vec2> {
+    fn path_finding(&self, problem: &Problem) -> Vec<Vec2> {
         let mut cnt: usize = 0;
 
         let grid_map = problem.grid_map();

@@ -1,9 +1,11 @@
-use crate::algorithm::a_star::AStarStrategy;
+// use crate::algorithm::a_star::AStarStrategy;
+use crate::algorithm::aco_pso::AcoPsoStrategy;
 use crate::algorithm::problem::Problem;
 use crate::algorithm::strategy::Strategy;
 use crate::game::camera::CameraManager;
 use crate::game::map_renderer::MapRenderer;
 use crate::game::path_renderer::PathRenderer;
+use crate::game::temporary_dot_renderer::{draw_all_temporary_dots, update_temporary_dots};
 use crate::game::ui::UIManager;
 use macroquad::prelude::*;
 use std::sync::{Arc, mpsc};
@@ -122,7 +124,18 @@ impl GameManager {
 
             thread::spawn(move || {
                 let problem = Problem::new(grid_map, start, end);
-                let path = AStarStrategy::path_finding(&problem);
+                // let path = AStarStrategy {}.path_finding(&problem);
+                let path = AcoPsoStrategy {
+                    node_min_dist: 30.0,
+                    alpha: 2.0,
+                    beta: 4.0,
+                    deposit_constant: 5.0,
+                    evaporation: 0.1,
+                    init_pheromone: 0.5,
+                    min_ant_count: 1000,
+                    max_ant_try: 1000,
+                }
+                .path_finding(&problem);
                 let _ = sender.send(path);
             });
         }
@@ -138,6 +151,9 @@ impl GameManager {
                 self.set_state(GameState::Idle);
             }
         }
+
+        // Update temporary dots
+        update_temporary_dots();
 
         self.handle_input();
 
@@ -188,6 +204,9 @@ impl GameManager {
         self.ui_manager
             .draw(&self.camera_manager.camera(), self.get_state_description());
         self.path_renderer.draw();
+
+        // Draw all temporary dots
+        draw_all_temporary_dots();
 
         // Draw start and end position markers
         if let Some(start_pos) = self.start_pos {
