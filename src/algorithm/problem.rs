@@ -5,7 +5,7 @@ use std::sync::Arc;
 pub struct Problem {
     pub grid_map: Arc<GridMap>,
     pub start: Vec2,
-    pub end: Vec2,
+    pub goal: Vec2,
 }
 
 impl Problem {
@@ -13,13 +13,19 @@ impl Problem {
         Self {
             grid_map,
             start,
-            end,
+            goal: end,
         }
     }
 
-    pub fn grid_map(&self) -> &GridMap { &self.grid_map }
+    pub fn grid_map(&self) -> &GridMap {
+        &self.grid_map
+    }
 
-    pub fn start(&self) -> Vec2 { self.start }
+    pub fn start(&self) -> Vec2 {
+        self.start
+    }
 
-    pub fn end(&self) -> Vec2 { self.end }
+    pub fn goal(&self) -> Vec2 {
+        self.goal
+    }
 }

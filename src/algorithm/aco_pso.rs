@@ -3,7 +3,7 @@ use crate::algorithm::strategy::*;
 use crate::game::temporary_dot_renderer::draw_temporary_dot;
 use crate::world::{grid::*, types::*};
 use macroquad::prelude::*;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::hash::Hash;
 
 #[derive(Debug, Clone, Eq)]
@@ -63,130 +63,113 @@ pub struct AcoPsoStrategy {
 
 impl Strategy for AcoPsoStrategy {
     fn path_finding(&self, problem: &Problem) -> Vec<Vec2> {
-        let mut path_pheromone: HashMap<Path, f64> = HashMap::new();
-
         let grid_map = problem.grid_map();
         let start = problem.start();
-        let end = problem.end();
+        let goal = problem.goal();
 
         let start_node = self.world_to_node_pos(start).unwrap();
-        let end_node = self.world_to_node_pos(end).unwrap();
+        let goal_node = self.world_to_node_pos(goal).unwrap();
 
-        let mut foundcnt = 0;
+        let mut path_pheromones: HashMap<Path, f64> = HashMap::new();
 
-        for index in 0..self.min_ant_count {
-            let mut try_count: u32 = 0;
-            let mut ant_route: Vec<Path> = Vec::new();
-            let mut visited: HashSet<Node> = HashSet::new();
-            let mut route_len: f64 = 0.0;
+        for ant_index in 0..self.min_ant_count {
+            let mut route: Vec<Node> = Vec::new();
 
-            // Forward
             let mut cur_node = start_node.clone();
-            let mut path_found = loop {
-                if self.has_sight(self.node_to_world_pos(cur_node.clone()), end, grid_map) {
-                    break true;
-                }
+            route.push(cur_node.clone());
+            let mut try_count: i32 = self.max_ant_try as i32;
+            let path_found = loop {
+                let mut node_desires: Vec<(Node, f64)> = Vec::new();
+                let mut total_desire = 0.0;
+                for next_node in self.next_node_list(cur_node.clone()) {
+                    let cur_pos = self.node_to_world_pos(cur_node.clone());
+                    let next_pos = self.node_to_world_pos(next_node.clone());
 
-                // Debug ======
+                    if !self.has_sight(cur_pos.clone(), next_pos.clone(), &grid_map) {
+                        continue;
+                    }
+
+                    let desire = self.path_desire(
+                        Path::new(cur_node.clone(), next_node.clone()),
+                        &path_pheromones,
+                        goal.clone(),
+                        ant_index as i32,
+                    );
+                    node_desires.push((next_node, desire));
+                    total_desire += desire;
+                }
+                if node_desires.is_empty() {
+                    break false;
+                }
+                let next_node = self.get_next_node(&node_desires, total_desire);
+                cur_node = next_node;
+                route.push(cur_node.clone());
+
+                // Debug
                 draw_temporary_dot(self.node_to_world_pos(cur_node.clone()), WHITE, 10.0, 1.0);
+                //
 
-                try_count += 1;
-                if try_count > self.max_ant_try {
-                    break false;
-                };
-
-                let Some(next_node) = self.cal_next_node(cur_node.clone(), grid_map, &visited, &path_pheromone, &problem)
-                else {
-                    break false;
-                };
-
-                route_len += self
-                    .node_to_world_pos(cur_node.clone())
-                    .distance(self.node_to_world_pos(next_node.clone())) as f64;
-                ant_route.push(Path::new(cur_node.clone(), next_node.clone()));
-                cur_node = next_node;
-            };
-
-            if !path_found {
-                continue;
-            }
-
-            // Backward
-            ant_route.push(Path::new(cur_node.clone(), end_node.clone()));
-            cur_node = end_node.clone();
-            path_found = loop {
-                if self.has_sight(self.node_to_world_pos(cur_node.clone()), start, grid_map) {
+                if cur_node == goal_node {
                     break true;
                 }
 
-                // Debug ======
-                draw_temporary_dot(self.node_to_world_pos(cur_node.clone()), GRAY, 10.0, 1.0);
-
-                try_count += 1;
-                if try_count > self.max_ant_try {
+                try_count -= 1;
+                if try_count <= 0 {
                     break false;
-                };
-
-                let Some(next_node) = self.cal_next_node(cur_node.clone(), grid_map, &visited, &path_pheromone, &problem)
-                else {
-                    self.add_pheromone(&ant_route, -route_len, index, &mut path_pheromone);
-                    break false;
-                };
-
-                route_len += self
-                    .node_to_world_pos(cur_node.clone())
-                    .distance(self.node_to_world_pos(next_node.clone())) as f64;
-                ant_route.push(Path::new(cur_node.clone(), next_node.clone()));
-                cur_node = next_node;
+                }
             };
 
             if path_found {
-                self.evaporate_pheromone(&mut path_pheromone);
-                self.add_pheromone(&ant_route, route_len, index, &mut path_pheromone);
-                foundcnt += 1;
+                std::println!("Found with {}", route.len());
+
+                self.update_pheromone(
+                    &route,
+                    route.len() as f64 * self.node_min_dist as f64,
+                    &mut path_pheromones,
+                    ant_index as i32,
+                );
             }
         }
-        std::println!("found {}", foundcnt);
 
-        let mut aco_route: Vec<Vec2> = Vec::new();
-        let mut aco_visited: HashSet<Node> = HashSet::new();
-        let mut aco_cur_node = start_node.clone();
-        aco_visited.insert(aco_cur_node.clone());
-        while !self.has_sight(self.node_to_world_pos(aco_cur_node.clone()), end, grid_map) {
-            let near_nodes = self.near_node_view(aco_cur_node.clone());
-            let mut best = (near_nodes.first().unwrap().clone(), -1.0);
-            for next_node in near_nodes {
-                if aco_visited.contains(&next_node.clone()) {
-                    continue;
+        let mut aco_route: Vec<Node> = Vec::new();
+        let aco_found = {
+            let mut cur_node = start_node.clone();
+            aco_route.push(cur_node.clone());
+            let mut try_count: i32 = self.max_ant_try as i32;
+            let path_found = loop {
+                let mut best = -1.0;
+                let mut desire_node = None;
+                for next_node in self.next_node_list(cur_node.clone()) {
+                    let pheromone = *path_pheromones
+                        .get(&Path::new(cur_node.clone(), next_node.clone()))
+                        .unwrap_or(&0.0);
+
+                    if pheromone > best {
+                        best = pheromone;
+                        desire_node = Some(next_node);
+                    }
                 }
-                if !self.has_sight(
-                    self.node_to_world_pos(aco_cur_node.clone()),
-                    self.node_to_world_pos(next_node.clone()),
-                    grid_map,
-                ) {
-                    continue;
+                cur_node = desire_node.unwrap();
+                aco_route.push(cur_node.clone());
+
+                if cur_node == goal_node {
+                    break true;
                 }
 
-                let pheromone = *path_pheromone
-                    .get(&Path::new(aco_cur_node.clone(), next_node.clone()))
-                    .unwrap_or(&0.0);
-                if pheromone > best.1 {
-                    best = (next_node.clone(), pheromone);
+                try_count -= 1;
+                if try_count <= 0 {
+                    break false;
                 }
-            }
-            let next_node = best.0;
+            };
 
-            aco_route.push(self.node_to_world_pos(next_node.clone()));
-            aco_visited.insert(next_node.clone());
-            aco_cur_node = next_node;
+            path_found
+        };
+
+        if !aco_found {
+            return Vec::new();
         }
 
-        let mut result: Vec<Vec2> = Vec::new();
-        result.push(start);
-        result.extend(aco_route);
-        result.push(end);
-
-        result
+        aco_route.iter().map(|x| self.node_to_world_pos(x.clone())).collect()
     }
 }
 
@@ -205,7 +188,7 @@ impl AcoPsoStrategy {
         Vec2::new(npos.pos.0 as f32 * self.node_min_dist, npos.pos.1 as f32 * self.node_min_dist)
     }
 
-    fn near_node_view(&self, npos: Node) -> Vec<Node> {
+    fn next_node_list(&self, npos: Node) -> Vec<Node> {
         let mut v = Vec::new();
         v.push(Node::new(npos.pos.0 + 1, npos.pos.1 + 0));
         // v.push(Node::new(npos.pos.0 + 1, npos.pos.1 - 1));
@@ -235,70 +218,42 @@ impl AcoPsoStrategy {
 }
 
 impl AcoPsoStrategy {
-    fn cal_path_value(&self, path: Path, path_pheromones: &HashMap<Path, f64>, problem: &Problem) -> f64 {
-        path_pheromones.get(&path).unwrap_or(&self.init_pheromone).powf(self.alpha)
-            * (1.0 / self.node_to_world_pos(path.to).distance(problem.end) as f64).powf(self.beta)
+    fn path_desire(&self, path: Path, path_pheromones: &HashMap<Path, f64>, goal: Vec2, ant_index: i32) -> f64 {
+        let pheromone = path_pheromones
+            .get(&path)
+            .unwrap_or(&self.init_pheromone.powi(ant_index + 1))
+            .powf(self.alpha);
+        let heuristic = (1.0 / self.node_to_world_pos(path.to).distance(goal) as f64).powf(self.beta);
+        pheromone * heuristic
     }
 
-    fn cal_next_node(
-        &self,
-        from: Node,
-        grid_map: &GridMap,
-        visited: &HashSet<Node>,
-        path_pheromones: &HashMap<Path, f64>,
-        problem: &Problem,
-    ) -> Option<Node> {
-        let mut total_pheromone: f64 = 0.0;
-        let mut node_pheromones: Vec<(Node, f64)> = Vec::new();
-        node_pheromones.reserve(8);
-
-        let near_nodes = self.near_node_view(from.clone());
-        for next_node in near_nodes {
-            if visited.contains(&next_node.clone()) {
-                continue;
-            }
-            if !self.has_sight(
-                self.node_to_world_pos(from.clone()),
-                self.node_to_world_pos(next_node.clone()),
-                grid_map,
-            ) {
-                continue;
-            }
-
-            let path = Path::new(from.clone(), next_node.clone());
-            let pheromone = self.cal_path_value(path, &path_pheromones, &problem);
-            node_pheromones.push((next_node.clone(), pheromone));
-            total_pheromone += pheromone;
-        }
-
-        if node_pheromones.is_empty() {
-            return None;
-        }
-
-        let random: f64 = rand::gen_range(0.0, total_pheromone);
+    fn get_next_node(&self, node_desires: &[(Node, f64)], total_desire: f64) -> Node {
+        let random: f64 = rand::gen_range(0.0, total_desire);
 
         let mut accumulated_probability = 0.0;
-        for (node, pheromone) in &node_pheromones {
-            accumulated_probability += pheromone;
+        for (node, disire) in node_desires {
+            accumulated_probability += disire;
             if random <= accumulated_probability {
-                return Some(node.clone());
+                return node.clone();
             }
         }
 
-        Some(node_pheromones.last().unwrap().0.clone())
+        node_desires.last().unwrap().0.clone()
     }
 
-    fn evaporate_pheromone(&self, path_pheromone: &mut HashMap<Path, f64>) {
-        let _ = path_pheromone.iter_mut().map(|x| *x.1 *= 1.0 - self.evaporation);
-    }
-    fn add_pheromone(&self, route: &[Path], route_len: f64, route_index: u32, path_pheromone: &mut HashMap<Path, f64>) {
-        for path in route {
-            if let Some(pheromone) = path_pheromone.get_mut(path) {
+    fn update_pheromone(&self, route: &[Node], route_len: f64, path_pheromones: &mut HashMap<Path, f64>, ant_index: i32) {
+        path_pheromones.iter_mut().for_each(|(_, pheromone)| {
+            *pheromone *= 1.0 - self.evaporation;
+        });
+
+        for nodes in route.windows(2) {
+            let path = Path::new(nodes[0].clone(), nodes[1].clone());
+            if let Some(pheromone) = path_pheromones.get_mut(&path) {
                 *pheromone += self.deposit_constant / route_len;
             } else {
-                path_pheromone.insert(
+                path_pheromones.insert(
                     path.clone(),
-                    self.init_pheromone * (1.0 - self.evaporation).powi(route_index as i32) + self.deposit_constant / route_len,
+                    self.init_pheromone * (1.0 - self.evaporation).powi(ant_index + 1) + self.deposit_constant / route_len,
                 );
             }
         }

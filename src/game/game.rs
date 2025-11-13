@@ -126,14 +126,14 @@ impl GameManager {
                 let problem = Problem::new(grid_map, start, end);
                 // let path = AStarStrategy {}.path_finding(&problem);
                 let path = AcoPsoStrategy {
-                    node_min_dist: 30.0,
-                    alpha: 2.0,
-                    beta: 4.0,
-                    deposit_constant: 5.0,
+                    node_min_dist: 41.0,
+                    alpha: 1.5,
+                    beta: 1.0,
+                    deposit_constant: 10.0,
                     evaporation: 0.1,
-                    init_pheromone: 0.5,
-                    min_ant_count: 1000,
-                    max_ant_try: 1000,
+                    init_pheromone: 1.0,
+                    min_ant_count: 100,
+                    max_ant_try: 5000,
                 }
                 .path_finding(&problem);
                 let _ = sender.send(path);

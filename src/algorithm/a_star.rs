@@ -120,7 +120,7 @@ impl Strategy for AStarStrategy {
 
         let grid_map = problem.grid_map();
         let start = problem.start();
-        let goal = problem.end();
+        let goal = problem.goal();
 
         let mut queue = BinaryHeap::new();
         let mut g_costs: HashMap<(u32, u32), f32> = HashMap::new();
