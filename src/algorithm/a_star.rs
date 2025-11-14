@@ -115,9 +115,7 @@ impl AStarStrategy {
 }
 
 impl Strategy for AStarStrategy {
-    fn path_finding(&self, problem: &Problem) -> Vec<Vec2> {
-        let mut cnt: usize = 0;
-
+    fn path_finding(&self, problem: &Problem) -> Option<Vec<Vec2>> {
         let grid_map = problem.grid_map();
         let start = problem.start();
         let goal = problem.goal();
@@ -168,8 +166,6 @@ impl Strategy for AStarStrategy {
 
                 let should_process = g_costs.get(&new_key).map_or(true, |&existing_g| new_g < existing_g);
 
-                cnt += 1;
-
                 if should_process {
                     let new_node = Node {
                         pos: new_pos,
@@ -185,8 +181,6 @@ impl Strategy for AStarStrategy {
             }
         }
 
-        std::println!("A* loop: {}", cnt);
-
         if let Some(goal) = goal_node {
             let mut path = Vec::new();
             let mut current = goal.pos;
@@ -198,14 +192,14 @@ impl Strategy for AStarStrategy {
                     path.push(prev);
                     current = prev;
                 } else {
-                    return Vec::new();
+                    return None;
                 }
             }
 
             path.reverse();
-            path
+            Some(path)
         } else {
-            Vec::new()
+            None
         }
     }
 }

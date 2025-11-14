@@ -3,7 +3,7 @@ use crate::algorithm::strategy::*;
 use crate::game::temporary_dot_renderer::draw_temporary_dot;
 use crate::world::{grid::*, types::*};
 use macroquad::prelude::*;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
 
 #[derive(Debug, Clone, Eq)]
@@ -49,7 +49,7 @@ impl PartialEq for Path {
 }
 
 pub struct AcoPsoStrategy {
-    pub node_min_dist: f32,
+    pub node_dist: f32,
 
     pub alpha: f64,
     pub beta: f64,
@@ -62,7 +62,7 @@ pub struct AcoPsoStrategy {
 }
 
 impl Strategy for AcoPsoStrategy {
-    fn path_finding(&self, problem: &Problem) -> Vec<Vec2> {
+    fn path_finding(&self, problem: &Problem) -> Option<Vec<Vec2>> {
         let grid_map = problem.grid_map();
         let start = problem.start();
         let goal = problem.goal();
@@ -72,11 +72,15 @@ impl Strategy for AcoPsoStrategy {
 
         let mut path_pheromones: HashMap<Path, f64> = HashMap::new();
 
-        for ant_index in 0..self.min_ant_count {
+        let mut best_aco_route: Option<Vec<Node>> = None;
+
+        for _ in 0..self.min_ant_count {
             let mut route: Vec<Node> = Vec::new();
+            let mut visited: HashSet<Node> = HashSet::new();
 
             let mut cur_node = start_node.clone();
             route.push(cur_node.clone());
+            visited.insert(cur_node.clone());
             let mut try_count: i32 = self.max_ant_try as i32;
             let path_found = loop {
                 let mut node_desires: Vec<(Node, f64)> = Vec::new();
@@ -89,12 +93,13 @@ impl Strategy for AcoPsoStrategy {
                         continue;
                     }
 
-                    let desire = self.path_desire(
-                        Path::new(cur_node.clone(), next_node.clone()),
-                        &path_pheromones,
-                        goal.clone(),
-                        ant_index as i32,
-                    );
+                    let mut desire =
+                        self.path_desire(Path::new(cur_node.clone(), next_node.clone()), &path_pheromones, goal.clone());
+
+                    if visited.contains(&next_node) {
+                        desire *= 0.001;
+                    }
+
                     node_desires.push((next_node, desire));
                     total_desire += desire;
                 }
@@ -103,7 +108,9 @@ impl Strategy for AcoPsoStrategy {
                 }
                 let next_node = self.get_next_node(&node_desires, total_desire);
                 cur_node = next_node;
+
                 route.push(cur_node.clone());
+                visited.insert(cur_node.clone());
 
                 // Debug
                 draw_temporary_dot(self.node_to_world_pos(cur_node.clone()), WHITE, 10.0, 1.0);
@@ -120,56 +127,19 @@ impl Strategy for AcoPsoStrategy {
             };
 
             if path_found {
-                std::println!("Found with {}", route.len());
+                self.update_pheromone(&route, route.len() as f64 * self.node_dist as f64, &mut path_pheromones);
 
-                self.update_pheromone(
-                    &route,
-                    route.len() as f64 * self.node_min_dist as f64,
-                    &mut path_pheromones,
-                    ant_index as i32,
-                );
+                if best_aco_route.is_none() || best_aco_route.as_ref().unwrap().len() > route.len() {
+                    best_aco_route = Some(route);
+                }
             }
         }
 
-        let mut aco_route: Vec<Node> = Vec::new();
-        let aco_found = {
-            let mut cur_node = start_node.clone();
-            aco_route.push(cur_node.clone());
-            let mut try_count: i32 = self.max_ant_try as i32;
-            let path_found = loop {
-                let mut best = -1.0;
-                let mut desire_node = None;
-                for next_node in self.next_node_list(cur_node.clone()) {
-                    let pheromone = *path_pheromones
-                        .get(&Path::new(cur_node.clone(), next_node.clone()))
-                        .unwrap_or(&0.0);
-
-                    if pheromone > best {
-                        best = pheromone;
-                        desire_node = Some(next_node);
-                    }
-                }
-                cur_node = desire_node.unwrap();
-                aco_route.push(cur_node.clone());
-
-                if cur_node == goal_node {
-                    break true;
-                }
-
-                try_count -= 1;
-                if try_count <= 0 {
-                    break false;
-                }
-            };
-
-            path_found
-        };
-
-        if !aco_found {
-            return Vec::new();
+        if let Some(best_route) = best_aco_route {
+            Some(best_route.iter().map(|x| self.node_to_world_pos(x.clone())).collect())
+        } else {
+            None
         }
-
-        aco_route.iter().map(|x| self.node_to_world_pos(x.clone())).collect()
     }
 }
 
@@ -179,13 +149,16 @@ impl AcoPsoStrategy {
             None
         } else {
             Some(Node::new(
-                (wpos.x / self.node_min_dist).round() as i32,
-                (wpos.y / self.node_min_dist).round() as i32,
+                ((wpos.x - self.node_dist / 2.0) / self.node_dist).round() as i32,
+                ((wpos.y - self.node_dist / 2.0) / self.node_dist).round() as i32,
             ))
         }
     }
     fn node_to_world_pos(&self, npos: Node) -> Vec2 {
-        Vec2::new(npos.pos.0 as f32 * self.node_min_dist, npos.pos.1 as f32 * self.node_min_dist)
+        Vec2::new(
+            npos.pos.0 as f32 * self.node_dist + self.node_dist / 2.0,
+            npos.pos.1 as f32 * self.node_dist + self.node_dist / 2.0,
+        )
     }
 
     fn next_node_list(&self, npos: Node) -> Vec<Node> {
@@ -218,11 +191,8 @@ impl AcoPsoStrategy {
 }
 
 impl AcoPsoStrategy {
-    fn path_desire(&self, path: Path, path_pheromones: &HashMap<Path, f64>, goal: Vec2, ant_index: i32) -> f64 {
-        let pheromone = path_pheromones
-            .get(&path)
-            .unwrap_or(&self.init_pheromone.powi(ant_index + 1))
-            .powf(self.alpha);
+    fn path_desire(&self, path: Path, path_pheromones: &HashMap<Path, f64>, goal: Vec2) -> f64 {
+        let pheromone = path_pheromones.get(&path).unwrap_or(&self.init_pheromone).powf(self.alpha);
         let heuristic = (1.0 / self.node_to_world_pos(path.to).distance(goal) as f64).powf(self.beta);
         pheromone * heuristic
     }
@@ -241,7 +211,7 @@ impl AcoPsoStrategy {
         node_desires.last().unwrap().0.clone()
     }
 
-    fn update_pheromone(&self, route: &[Node], route_len: f64, path_pheromones: &mut HashMap<Path, f64>, ant_index: i32) {
+    fn update_pheromone(&self, route: &[Node], route_len: f64, path_pheromones: &mut HashMap<Path, f64>) {
         path_pheromones.iter_mut().for_each(|(_, pheromone)| {
             *pheromone *= 1.0 - self.evaporation;
         });
@@ -251,10 +221,7 @@ impl AcoPsoStrategy {
             if let Some(pheromone) = path_pheromones.get_mut(&path) {
                 *pheromone += self.deposit_constant / route_len;
             } else {
-                path_pheromones.insert(
-                    path.clone(),
-                    self.init_pheromone * (1.0 - self.evaporation).powi(ant_index + 1) + self.deposit_constant / route_len,
-                );
+                path_pheromones.insert(path.clone(), self.init_pheromone + self.deposit_constant / route_len);
             }
         }
     }

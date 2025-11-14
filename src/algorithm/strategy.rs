@@ -2,5 +2,5 @@ use crate::algorithm::problem::*;
 use macroquad::prelude::*;
 
 pub trait Strategy {
-    fn path_finding(&self, problem: &Problem) -> Vec<Vec2>;
+    fn path_finding(&self, problem: &Problem) -> Option<Vec<Vec2>>;
 }

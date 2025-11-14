@@ -126,17 +126,21 @@ impl GameManager {
                 let problem = Problem::new(grid_map, start, end);
                 // let path = AStarStrategy {}.path_finding(&problem);
                 let path = AcoPsoStrategy {
-                    node_min_dist: 41.0,
-                    alpha: 1.5,
-                    beta: 1.0,
-                    deposit_constant: 10.0,
-                    evaporation: 0.1,
-                    init_pheromone: 1.0,
-                    min_ant_count: 100,
+                    node_dist: 100.0 / 3.0,
+                    alpha: 2.0,
+                    beta: 4.0,
+                    deposit_constant: 2000.0,
+                    evaporation: 0.15,
+                    init_pheromone: 0.05,
+                    min_ant_count: 500,
                     max_ant_try: 5000,
                 }
-                .path_finding(&problem);
-                let _ = sender.send(path);
+                .path_finding(&problem)
+                .or_else(|| {
+                    std::println!("================================== \n== NOT FOUND PATH");
+                    None
+                });
+                let _ = sender.send(path.unwrap());
             });
         }
     }
