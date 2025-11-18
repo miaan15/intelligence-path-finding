@@ -48,7 +48,7 @@ impl PartialEq for Path {
     }
 }
 
-pub struct AcoPsoStrategy {
+pub struct AcoStrategy {
     pub node_dist: f32,
 
     pub alpha: f64,
@@ -61,7 +61,7 @@ pub struct AcoPsoStrategy {
     pub max_ant_try: u32,
 }
 
-impl Strategy for AcoPsoStrategy {
+impl Strategy for AcoStrategy {
     fn path_finding(&self, problem: &Problem) -> Option<Vec<Vec2>> {
         let grid_map = problem.grid_map();
         let start = problem.start();
@@ -143,7 +143,7 @@ impl Strategy for AcoPsoStrategy {
     }
 }
 
-impl AcoPsoStrategy {
+impl AcoStrategy {
     fn world_to_node_pos(&self, wpos: Vec2) -> Option<Node> {
         if wpos.is_nan() {
             None
@@ -190,7 +190,7 @@ impl AcoPsoStrategy {
     }
 }
 
-impl AcoPsoStrategy {
+impl AcoStrategy {
     fn path_desire(&self, path: Path, path_pheromones: &HashMap<Path, f64>, goal: Vec2) -> f64 {
         let pheromone = path_pheromones.get(&path).unwrap_or(&self.init_pheromone).powf(self.alpha);
         let heuristic = (1.0 / self.node_to_world_pos(path.to).distance(goal) as f64).powf(self.beta);

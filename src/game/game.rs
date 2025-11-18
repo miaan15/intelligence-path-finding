@@ -1,6 +1,7 @@
 // use crate::algorithm::a_star::AStarStrategy;
-use crate::algorithm::aco_pso::AcoPsoStrategy;
+use crate::algorithm::aco::AcoStrategy;
 use crate::algorithm::problem::Problem;
+use crate::algorithm::pso::PsoStrategy;
 use crate::algorithm::strategy::Strategy;
 use crate::game::camera::CameraManager;
 use crate::game::map_renderer::MapRenderer;
@@ -37,7 +38,7 @@ pub struct GameManager {
     start_pos: Option<Vec2>,
     end_pos: Option<Vec2>,
     render_config: RenderConfig,
-    pathfinding_receiver: Option<mpsc::Receiver<Vec<Vec2>>>,
+    pathfinding_receiver: Option<mpsc::Receiver<(Option<Vec<Vec2>>, Option<Vec<Vec2>>)>>,
     grid_map: Arc<crate::world::grid::GridMap>,
 
     map_renderer: Box<MapRenderer>,
@@ -125,7 +126,7 @@ impl GameManager {
             thread::spawn(move || {
                 let problem = Problem::new(grid_map, start, end);
                 // let path = AStarStrategy {}.path_finding(&problem);
-                let path = AcoPsoStrategy {
+                let aco_path = AcoStrategy {
                     node_dist: 100.0 / 2.0,
                     alpha: 1.0,
                     beta: 5.0,
@@ -133,14 +134,29 @@ impl GameManager {
                     evaporation: 0.2,
                     init_pheromone: 0.05,
                     min_ant_count: 1000,
-                    max_ant_try: 5000,
+                    max_ant_try: 500,
                 }
                 .path_finding(&problem)
                 .or_else(|| {
                     std::println!("================================== \n== NOT FOUND PATH");
                     None
                 });
-                let _ = sender.send(path.unwrap());
+
+                let pso_path = if let Some(ref aco_solution) = aco_path {
+                    Some(PsoStrategy {
+                        init_random_offset: 50.0,
+                        swarms_count: 100,
+                        inertia_weight: 0.9,
+                        local_factor: 1.0,
+                        global_factor: 6.0,
+                        iterate_count: 500,
+                    }
+                    .upgrade_path(&problem, aco_solution))
+                } else {
+                    None
+                };
+
+                let _ = sender.send((aco_path, pso_path));
             });
         }
     }
@@ -148,8 +164,13 @@ impl GameManager {
     pub fn update(&mut self) {
         // Check if we have a pending pathfinding result
         if let Some(receiver) = &mut self.pathfinding_receiver {
-            if let Ok(path) = receiver.try_recv() {
-                self.path_renderer_mut().set_path(path);
+            if let Ok((aco_path, pso_path)) = receiver.try_recv() {
+                if let Some(aco) = aco_path {
+                    self.path_renderer_mut().set_aco_path(aco);
+                }
+                if let Some(pso) = pso_path {
+                    self.path_renderer_mut().set_pso_path(pso);
+                }
                 self.ui_manager_mut().stop_timer();
                 self.pathfinding_receiver = None;
                 self.set_state(GameState::Idle);
@@ -178,7 +199,7 @@ impl GameManager {
         }
         if is_key_pressed(KeyCode::C) {
             self.set_state(GameState::Idle);
-            self.path_renderer_mut().unset_path();
+            self.path_renderer_mut().unset_paths();
             self.ui_manager_mut().reset_timer();
         }
 
