@@ -113,7 +113,7 @@ impl Strategy for AcoPsoStrategy {
                 visited.insert(cur_node.clone());
 
                 // Debug
-                draw_temporary_dot(self.node_to_world_pos(cur_node.clone()), WHITE, 10.0, 1.0);
+                draw_temporary_dot(self.node_to_world_pos(cur_node.clone()), WHITE, 10.0, 0.1);
                 //
 
                 if cur_node == goal_node {
@@ -218,10 +218,11 @@ impl AcoPsoStrategy {
 
         for nodes in route.windows(2) {
             let path = Path::new(nodes[0].clone(), nodes[1].clone());
+            let deposit_pheromone = self.deposit_constant / (route_len);
             if let Some(pheromone) = path_pheromones.get_mut(&path) {
-                *pheromone += self.deposit_constant / route_len;
+                *pheromone += deposit_pheromone;
             } else {
-                path_pheromones.insert(path.clone(), self.init_pheromone + self.deposit_constant / route_len);
+                path_pheromones.insert(path.clone(), self.init_pheromone + deposit_pheromone);
             }
         }
     }
