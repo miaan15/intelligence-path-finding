@@ -144,12 +144,12 @@ impl GameManager {
 
                 let pso_path = if let Some(ref aco_solution) = aco_path {
                     Some(PsoStrategy {
-                        init_random_offset: 50.0,
+                        init_random_offset: 30.0,
                         swarms_count: 100,
                         inertia_weight: 0.9,
                         local_factor: 1.0,
-                        global_factor: 6.0,
-                        iterate_count: 500,
+                        global_factor: 10.0,
+                        iterate_count: 1000,
                     }
                     .upgrade_path(&problem, aco_solution))
                 } else {

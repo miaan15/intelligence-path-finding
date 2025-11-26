@@ -81,7 +81,7 @@ impl PsoStrategy {
 
     fn cal_fitness(&self, problem: &Problem, particle: &[Vec2]) -> f64 {
         if particle.len() < 2 {
-            return f64::INFINITY;
+            return 1e10;
         }
 
         let mut total_length = 0.0;
@@ -96,7 +96,7 @@ impl PsoStrategy {
             };
 
             if let Some(_hit) = problem.grid_map.raycast(ray) {
-                return f64::INFINITY;
+                return 1e10;
             }
 
             total_length += (end - start).length() as f64;
