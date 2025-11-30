@@ -4,7 +4,6 @@ pub fn setup_grid(grid_map: &mut GridMap) {
     let width = 25;
     let height = 25;
 
-    // === OUTER WALLS ===
     for x in 0..width {
         grid_map.grid_mut().set(x, 0, GridNodeValue::Obstacle);
         grid_map.grid_mut().set(x, height - 1, GridNodeValue::Obstacle);
@@ -14,144 +13,168 @@ pub fn setup_grid(grid_map: &mut GridMap) {
         grid_map.grid_mut().set(width - 1, y, GridNodeValue::Obstacle);
     }
 
-    // === OUTER SPIRAL (Clockwise from outside) ===
-    // Top horizontal
-    for x in 2..23 {
-        grid_map.grid_mut().set(x, 2, GridNodeValue::Obstacle);
-    }
-    // Right vertical
-    for y in 2..23 {
-        grid_map.grid_mut().set(22, y, GridNodeValue::Obstacle);
-    }
-    // Bottom horizontal
-    for x in 2..23 {
-        grid_map.grid_mut().set(x, 22, GridNodeValue::Obstacle);
-    }
-    // Left vertical
-    for y in 2..23 {
-        grid_map.grid_mut().set(2, y, GridNodeValue::Obstacle);
-    }
-    // Gap to enter outer ring
-    grid_map.grid_mut().set(2, 12, GridNodeValue::Air);
-
-    // === SECOND RING SPIRAL ===
-    // Top horizontal
-    for x in 4..21 {
-        grid_map.grid_mut().set(x, 4, GridNodeValue::Obstacle);
-    }
-    // Right vertical
-    for y in 4..21 {
-        grid_map.grid_mut().set(20, y, GridNodeValue::Obstacle);
-    }
-    // Bottom horizontal
-    for x in 4..21 {
-        grid_map.grid_mut().set(x, 20, GridNodeValue::Obstacle);
-    }
-    // Left vertical
-    for y in 4..21 {
-        grid_map.grid_mut().set(4, y, GridNodeValue::Obstacle);
-    }
-    // Gap to enter second ring
-    grid_map.grid_mut().set(20, 12, GridNodeValue::Air);
-
-    // === THIRD RING SPIRAL ===
-    // Top horizontal
-    for x in 6..19 {
-        grid_map.grid_mut().set(x, 6, GridNodeValue::Obstacle);
-    }
-    // Right vertical
-    for y in 6..19 {
-        grid_map.grid_mut().set(18, y, GridNodeValue::Obstacle);
-    }
-    // Bottom horizontal
-    for x in 6..19 {
-        grid_map.grid_mut().set(x, 18, GridNodeValue::Obstacle);
-    }
-    // Left vertical
-    for y in 6..19 {
-        grid_map.grid_mut().set(6, y, GridNodeValue::Obstacle);
-    }
-    // Gap to enter third ring
-    grid_map.grid_mut().set(6, 12, GridNodeValue::Air);
-
-    // === FOURTH RING SPIRAL ===
-    // Top horizontal
-    for x in 8..17 {
-        grid_map.grid_mut().set(x, 8, GridNodeValue::Obstacle);
-    }
-    // Right vertical
-    for y in 8..17 {
-        grid_map.grid_mut().set(16, y, GridNodeValue::Obstacle);
-    }
-    // Bottom horizontal
-    for x in 8..17 {
-        grid_map.grid_mut().set(x, 16, GridNodeValue::Obstacle);
-    }
-    // Left vertical
-    for y in 8..17 {
-        grid_map.grid_mut().set(8, y, GridNodeValue::Obstacle);
-    }
-    // Gap to enter fourth ring
-    grid_map.grid_mut().set(16, 12, GridNodeValue::Air);
-
-    // === INNERMOST SPIRAL ===
-    // Top horizontal
-    for x in 10..15 {
+    for x in 0..6 {
         grid_map.grid_mut().set(x, 10, GridNodeValue::Obstacle);
     }
-    // Right vertical
-    for y in 10..15 {
-        grid_map.grid_mut().set(14, y, GridNodeValue::Obstacle);
-    }
-    // Bottom horizontal
-    for x in 10..15 {
+    for x in 18..25 {
         grid_map.grid_mut().set(x, 14, GridNodeValue::Obstacle);
     }
-    // Left vertical (partial)
-    for y in 10..14 {
+
+    for y in 0..6 {
         grid_map.grid_mut().set(10, y, GridNodeValue::Obstacle);
     }
-    // Gap to center
-    grid_map.grid_mut().set(10, 12, GridNodeValue::Air);
-
-    // === CROSS CORRIDORS (Creates alternative paths and loops) ===
-    // Horizontal corridor through middle
-    for x in 2..23 {
-        if x != 4 && x != 6 && x != 8 && x != 10 && x != 14 && x != 16 && x != 18 && x != 20 {
-            grid_map.grid_mut().set(x, 12, GridNodeValue::Air);
-        }
+    for y in 12..25 {
+        grid_map.grid_mut().set(13, y, GridNodeValue::Obstacle);
     }
 
-    // Vertical corridor creating more complexity
-    for y in 6..19 {
-        if y == 9 || y == 15 {
-            grid_map.grid_mut().set(12, y, GridNodeValue::Air);
-        }
-    }
-
-    // === ADDITIONAL BARRIERS TO FORCE LONGER PATHS ===
-    // Block some shortcut paths
-    for y in 3..7 {
-        grid_map.grid_mut().set(12, y, GridNodeValue::Obstacle);
-    }
-
-    for y in 18..22 {
-        grid_map.grid_mut().set(12, y, GridNodeValue::Obstacle);
-    }
-
-    for x in 3..7 {
-        grid_map.grid_mut().set(x, 8, GridNodeValue::Obstacle);
-    }
-
-    for x in 18..22 {
-        grid_map.grid_mut().set(x, 16, GridNodeValue::Obstacle);
-    }
-
-    grid_map.grid_mut().set(10, 2, GridNodeValue::Air);
-    grid_map.grid_mut().set(5, 8, GridNodeValue::Air);
-    grid_map.grid_mut().set(15, 6, GridNodeValue::Air);
-    grid_map.grid_mut().set(12, 21, GridNodeValue::Air);
-    grid_map.grid_mut().set(20, 17, GridNodeValue::Air);
+    // // === OUTER WALLS ===
+    // for x in 0..width {
+    //     grid_map.grid_mut().set(x, 0, GridNodeValue::Obstacle);
+    //     grid_map.grid_mut().set(x, height - 1, GridNodeValue::Obstacle);
+    // }
+    // for y in 0..height {
+    //     grid_map.grid_mut().set(0, y, GridNodeValue::Obstacle);
+    //     grid_map.grid_mut().set(width - 1, y, GridNodeValue::Obstacle);
+    // }
+    //
+    // // === OUTER SPIRAL (Clockwise from outside) ===
+    // // Top horizontal
+    // for x in 2..23 {
+    //     grid_map.grid_mut().set(x, 2, GridNodeValue::Obstacle);
+    // }
+    // // Right vertical
+    // for y in 2..23 {
+    //     grid_map.grid_mut().set(22, y, GridNodeValue::Obstacle);
+    // }
+    // // Bottom horizontal
+    // for x in 2..23 {
+    //     grid_map.grid_mut().set(x, 22, GridNodeValue::Obstacle);
+    // }
+    // // Left vertical
+    // for y in 2..23 {
+    //     grid_map.grid_mut().set(2, y, GridNodeValue::Obstacle);
+    // }
+    // // Gap to enter outer ring
+    // grid_map.grid_mut().set(2, 12, GridNodeValue::Air);
+    //
+    // // === SECOND RING SPIRAL ===
+    // // Top horizontal
+    // for x in 4..21 {
+    //     grid_map.grid_mut().set(x, 4, GridNodeValue::Obstacle);
+    // }
+    // // Right vertical
+    // for y in 4..21 {
+    //     grid_map.grid_mut().set(20, y, GridNodeValue::Obstacle);
+    // }
+    // // Bottom horizontal
+    // for x in 4..21 {
+    //     grid_map.grid_mut().set(x, 20, GridNodeValue::Obstacle);
+    // }
+    // // Left vertical
+    // for y in 4..21 {
+    //     grid_map.grid_mut().set(4, y, GridNodeValue::Obstacle);
+    // }
+    // // Gap to enter second ring
+    // grid_map.grid_mut().set(20, 12, GridNodeValue::Air);
+    //
+    // // === THIRD RING SPIRAL ===
+    // // Top horizontal
+    // for x in 6..19 {
+    //     grid_map.grid_mut().set(x, 6, GridNodeValue::Obstacle);
+    // }
+    // // Right vertical
+    // for y in 6..19 {
+    //     grid_map.grid_mut().set(18, y, GridNodeValue::Obstacle);
+    // }
+    // // Bottom horizontal
+    // for x in 6..19 {
+    //     grid_map.grid_mut().set(x, 18, GridNodeValue::Obstacle);
+    // }
+    // // Left vertical
+    // for y in 6..19 {
+    //     grid_map.grid_mut().set(6, y, GridNodeValue::Obstacle);
+    // }
+    // // Gap to enter third ring
+    // grid_map.grid_mut().set(6, 12, GridNodeValue::Air);
+    //
+    // // === FOURTH RING SPIRAL ===
+    // // Top horizontal
+    // for x in 8..17 {
+    //     grid_map.grid_mut().set(x, 8, GridNodeValue::Obstacle);
+    // }
+    // // Right vertical
+    // for y in 8..17 {
+    //     grid_map.grid_mut().set(16, y, GridNodeValue::Obstacle);
+    // }
+    // // Bottom horizontal
+    // for x in 8..17 {
+    //     grid_map.grid_mut().set(x, 16, GridNodeValue::Obstacle);
+    // }
+    // // Left vertical
+    // for y in 8..17 {
+    //     grid_map.grid_mut().set(8, y, GridNodeValue::Obstacle);
+    // }
+    // // Gap to enter fourth ring
+    // grid_map.grid_mut().set(16, 12, GridNodeValue::Air);
+    //
+    // // === INNERMOST SPIRAL ===
+    // // Top horizontal
+    // for x in 10..15 {
+    //     grid_map.grid_mut().set(x, 10, GridNodeValue::Obstacle);
+    // }
+    // // Right vertical
+    // for y in 10..15 {
+    //     grid_map.grid_mut().set(14, y, GridNodeValue::Obstacle);
+    // }
+    // // Bottom horizontal
+    // for x in 10..15 {
+    //     grid_map.grid_mut().set(x, 14, GridNodeValue::Obstacle);
+    // }
+    // // Left vertical (partial)
+    // for y in 10..14 {
+    //     grid_map.grid_mut().set(10, y, GridNodeValue::Obstacle);
+    // }
+    // // Gap to center
+    // grid_map.grid_mut().set(10, 12, GridNodeValue::Air);
+    //
+    // // === CROSS CORRIDORS (Creates alternative paths and loops) ===
+    // // Horizontal corridor through middle
+    // for x in 2..23 {
+    //     if x != 4 && x != 6 && x != 8 && x != 10 && x != 14 && x != 16 && x != 18 && x != 20 {
+    //         grid_map.grid_mut().set(x, 12, GridNodeValue::Air);
+    //     }
+    // }
+    //
+    // // Vertical corridor creating more complexity
+    // for y in 6..19 {
+    //     if y == 9 || y == 15 {
+    //         grid_map.grid_mut().set(12, y, GridNodeValue::Air);
+    //     }
+    // }
+    //
+    // // === ADDITIONAL BARRIERS TO FORCE LONGER PATHS ===
+    // // Block some shortcut paths
+    // for y in 3..7 {
+    //     grid_map.grid_mut().set(12, y, GridNodeValue::Obstacle);
+    // }
+    //
+    // for y in 18..22 {
+    //     grid_map.grid_mut().set(12, y, GridNodeValue::Obstacle);
+    // }
+    //
+    // for x in 3..7 {
+    //     grid_map.grid_mut().set(x, 8, GridNodeValue::Obstacle);
+    // }
+    //
+    // for x in 18..22 {
+    //     grid_map.grid_mut().set(x, 16, GridNodeValue::Obstacle);
+    // }
+    //
+    // grid_map.grid_mut().set(10, 2, GridNodeValue::Air);
+    // grid_map.grid_mut().set(5, 8, GridNodeValue::Air);
+    // grid_map.grid_mut().set(15, 6, GridNodeValue::Air);
+    // grid_map.grid_mut().set(12, 21, GridNodeValue::Air);
+    // grid_map.grid_mut().set(20, 17, GridNodeValue::Air);
 }
 
 // pub fn setup_grid(grid_map: &mut GridMap) {

@@ -64,7 +64,7 @@ impl PathRenderer {
                         path[i + 1].x,
                         path[i + 1].y,
                         self.config.path_thickness,
-                        BLUE, // PSO path in blue
+                        GREEN, // PSO path in blue
                     );
                 }
             }
